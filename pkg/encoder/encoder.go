@@ -31,6 +31,11 @@ func Encoders() []EncoderSpecs {
 			description:    "Base64. Set 'b64_url=true' for url variant and 'b64_nopad=true' to remove '=' padding.",
 			implementation: b64,
 		},
+		&encoderRecord{
+			name:           "json",
+			description:    "JSON string. Set 'html_escape=true' to encode html chars '<', '&', '>'",
+			implementation: jsonString,
+		},
 	}
 }
 
