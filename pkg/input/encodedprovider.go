@@ -21,7 +21,6 @@ func (eip *encodedInputProvider) Total() int         { return eip.iip.Total() }
 
 func (eip *encodedInputProvider) Value() []byte {
 	data, err := eip.ei.Encode(eip.iip.Value())
-	log.Printf("wht is this \n")
 	if err == nil {
 		return data
 	}
