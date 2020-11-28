@@ -36,6 +36,11 @@ func Encoders() []EncoderSpecs {
 			description:    "JSON string. Set 'html_escape=true' to encode html chars '<', '&', '>'",
 			implementation: jsonString,
 		},
+		&encoderRecord{
+			name:           "printf",
+			description:    "Use printf. E.g. 'printf_fmt=0x%05x' for int inputs, or 'printf_fmt=%05s' and 'printf_int=false'",
+			implementation: printf,
+		},
 	}
 }
 
