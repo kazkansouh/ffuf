@@ -14,6 +14,7 @@ type Config struct {
 	Url                    string                    `json:"url"`
 	Data                   string                    `json:"postdata"`
 	Quiet                  bool                      `json:"quiet"`
+	ShowBanner             bool                      `json:"banner"`
 	Colors                 bool                      `json:"colors"`
 	InputProviders         []InputProviderConfig     `json:"inputproviders"`
 	CommandKeywords        []string                  `json:"-"`

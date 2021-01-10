@@ -120,11 +120,12 @@ func main() {
 	flag.BoolVar(&conf.AutoCalibration, "ac", false, "Automatically calibrate filtering options")
 	flag.Var(&opts.AutoCalibrationStrings, "acc", "Custom auto-calibration string. Can be used multiple times. Implies -ac")
 	flag.IntVar(&conf.Threads, "t", 40, "Number of concurrent threads.")
-	flag.IntVar(&conf.Timeout, "timeout", 10, "HTTP request timeout in seconds.")
+	flag.IntVar(&conf.Timeout, "timeout", 30, "HTTP request timeout in seconds.")
 	flag.IntVar(&conf.MaxTime, "maxtime", 0, "Maximum running time in seconds for entire process.")
 	flag.IntVar(&conf.MaxTimeJob, "maxtime-job", 0, "Maximum running time in seconds per job.")
 	flag.BoolVar(&conf.Verbose, "v", false, "Verbose output, printing full URL and redirect location (if any) with the results.")
 	flag.BoolVar(&opts.showVersion, "V", false, "Show version information.")
+	flag.BoolVar(&conf.ShowBanner, "banner", false, "Show banner and config (only in non-quiet mode).")
 	flag.StringVar(&opts.debugLog, "debug-log", "", "Write all of the internal logging to the specified file.")
 	flag.Usage = Usage
 	flag.Parse()
@@ -149,7 +150,9 @@ func main() {
 			defer f.Close()
 		}
 	} else {
-		log.SetOutput(ioutil.Discard)
+		if (conf.Quiet) {
+			log.SetOutput(ioutil.Discard)
+		}
 	}
 	if err := prepareConfig(&opts, &conf); err != nil {
 		fmt.Fprintf(os.Stderr, "Encountered error(s): %s\n", err)
