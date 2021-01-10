@@ -127,6 +127,8 @@ func main() {
 	flag.BoolVar(&opts.showVersion, "V", false, "Show version information.")
 	flag.BoolVar(&conf.ShowBanner, "banner", false, "Show banner and config (only in non-quiet mode).")
 	flag.StringVar(&opts.debugLog, "debug-log", "", "Write all of the internal logging to the specified file.")
+	flag.IntVar(&conf.MaxTries, "maxtries", 1, "Number of times to try a request.")
+	flag.IntVar(&conf.RetryDelay, "retrydelay", 5, "When retrying a request, how many seconds to delay.")
 	flag.Usage = Usage
 	flag.Parse()
 	if opts.showVersion {

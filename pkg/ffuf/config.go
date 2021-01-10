@@ -46,6 +46,8 @@ type Config struct {
 	MaxTimeJob             int                       `json:"maxtime_job"`
 	Recursion              bool                      `json:"recursion"`
 	RecursionDepth         int                       `json:"recursion_depth"`
+	MaxTries               int                       `json:"maxtries"`
+	RetryDelay             int                       `json:"retry_delay"`
 }
 
 type InputProviderConfig struct {

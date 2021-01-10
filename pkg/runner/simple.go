@@ -89,6 +89,7 @@ func (r *SimpleRunner) Prepare(input map[string][]byte) (ffuf.Request, error) {
 
 func (r *SimpleRunner) Execute(req *ffuf.Request) (ffuf.Response, error) {
 	var httpreq *http.Request
+	var httpresp *http.Response
 	var err error
 	var rawreq []byte
 	data := bytes.NewReader(req.Data)
@@ -117,9 +118,17 @@ func (r *SimpleRunner) Execute(req *ffuf.Request) (ffuf.Response, error) {
 		rawreq, _ = httputil.DumpRequestOut(httpreq, true)
 	}
 
-	httpresp, err := r.client.Do(httpreq)
-	if err != nil {
-		return ffuf.Response{}, err
+	for i := 1; ; i++ {
+		httpresp, err = r.client.Do(httpreq)
+		if err == nil {
+			break
+		}
+
+		if i >= r.config.MaxTries {
+			return ffuf.Response{}, err
+		}
+
+		time.Sleep(time.Duration(r.config.RetryDelay) * time.Second)
 	}
 
 	resp := ffuf.NewResponse(httpresp, req)
