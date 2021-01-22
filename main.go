@@ -50,6 +50,7 @@ type cliOptions struct {
 	debugLog               string
 	listEncoders           bool
 	encoderParameters      multiStringFlag
+	dontCheckContentType   bool
 }
 
 type multiStringFlag []string
@@ -129,6 +130,7 @@ func main() {
 	flag.StringVar(&opts.debugLog, "debug-log", "", "Write all of the internal logging to the specified file.")
 	flag.IntVar(&conf.MaxTries, "maxtries", 1, "Number of times to try a request.")
 	flag.IntVar(&conf.RetryDelay, "retrydelay", 5, "When retrying a request, how many seconds to delay.")
+	flag.BoolVar(&opts.dontCheckContentType, "dont-check-content-type", false, "Dont error if content type not defined when body present.")
 	flag.Usage = Usage
 	flag.Parse()
 	if opts.showVersion {
@@ -152,7 +154,7 @@ func main() {
 			defer f.Close()
 		}
 	} else {
-		if (conf.Quiet) {
+		if conf.Quiet {
 			log.SetOutput(ioutil.Discard)
 		}
 	}
@@ -507,6 +509,12 @@ func prepareConfig(parseOpts *cliOptions, conf *ffuf.Config) error {
 	if conf.Method == "GET" {
 		if len(conf.Data) > 0 {
 			conf.Method = "POST"
+		}
+	}
+
+	if !parseOpts.dontCheckContentType && len(conf.Data) > 0 {
+		if _, found := conf.Headers[textproto.CanonicalMIMEHeaderKey("Content-Type")]; !found {
+			errs.Add(fmt.Errorf("No Content-Type header defined, ignore this error with flag: -dont-check-content-type"))
 		}
 	}
 
