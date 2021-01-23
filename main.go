@@ -51,6 +51,7 @@ type cliOptions struct {
 	listEncoders           bool
 	encoderParameters      multiStringFlag
 	dontCheckContentType   bool
+	dontSearchBackups      bool
 }
 
 type multiStringFlag []string
@@ -131,6 +132,8 @@ func main() {
 	flag.IntVar(&conf.MaxTries, "maxtries", 1, "Number of times to try a request.")
 	flag.IntVar(&conf.RetryDelay, "retrydelay", 5, "When retrying a request, how many seconds to delay.")
 	flag.BoolVar(&opts.dontCheckContentType, "dont-check-content-type", false, "Dont error if content type not defined when body present.")
+	flag.BoolVar(&opts.dontSearchBackups, "dont-search-backups", false, "Dont append backup exts. to FUZZ keyword on matched result, only takes effect when url ends in FUZZ.")
+
 	flag.Usage = Usage
 	flag.Parse()
 	if opts.showVersion {
@@ -533,6 +536,12 @@ func prepareConfig(parseOpts *cliOptions, conf *ffuf.Config) error {
 			errmsg := fmt.Sprintf("When using -recursion the URL (-u) must end with FUZZ keyword.")
 			errs.Add(fmt.Errorf(errmsg))
 		}
+	}
+
+	if !parseOpts.dontSearchBackups && conf.Method == "GET" && strings.HasSuffix(conf.Url, "FUZZ") && !strings.Contains(conf.Url, "?") {
+		conf.SearchBackups = true
+	} else {
+		conf.SearchBackups = false
 	}
 
 	return errs.ErrorOrNil()

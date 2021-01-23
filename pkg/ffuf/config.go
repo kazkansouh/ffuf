@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Headers                map[string]string         `json:"headers"`
 	Extensions             []string                  `json:"extensions"`
+	BackupExtensions       []string                  `json:"backup_extensions"`
 	DirSearchCompat        bool                      `json:"dirsearch_compatibility"`
 	Method                 string                    `json:"method"`
 	Url                    string                    `json:"url"`
@@ -48,6 +49,7 @@ type Config struct {
 	RecursionDepth         int                       `json:"recursion_depth"`
 	MaxTries               int                       `json:"maxtries"`
 	RetryDelay             int                       `json:"retry_delay"`
+	SearchBackups          bool                      `json:"search_backups"`
 }
 
 type InputProviderConfig struct {
@@ -55,6 +57,14 @@ type InputProviderConfig struct {
 	Keyword string                  `json:"keyword"`
 	Value   string                  `json:"value"`
 	Encoder encoder.EncoderInstance `json:"encoder"`
+}
+
+// list of extensions to append to filename
+var backupExtensions = []string{
+	"~", ".save", ".sav", ".bak", ".tar.gz", ".gz", ".7z", ".cab",
+	".tgz", ".gzip", ".bzip2", ".inc", ".zip", ".rar", ".jar",
+	".java", ".class", ".properties", ".bak", ".bak1", ".bkp",
+	".back", ".backup", ".backup1", ".old", ".old1", ".$$$",
 }
 
 func NewConfig(ctx context.Context) Config {
@@ -89,5 +99,8 @@ func NewConfig(ctx context.Context) Config {
 	conf.MaxTimeJob = 0
 	conf.Recursion = false
 	conf.RecursionDepth = 0
+	conf.MaxTries = 1
+	conf.RetryDelay = 5
+	conf.BackupExtensions = backupExtensions
 	return conf
 }

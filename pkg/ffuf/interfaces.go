@@ -20,6 +20,7 @@ type InputProvider interface {
 	Reset()
 	Value() map[string][]byte
 	Total() int
+	Inject(keyword string, values [][]byte)
 }
 
 //InternalInputProvider interface handles providing input data to InputProvider
@@ -31,6 +32,7 @@ type InternalInputProvider interface {
 	IncrementPosition()
 	Value() []byte
 	Total() int
+	Inject(values [][]byte)
 }
 
 //OutputProvider is responsible of providing output from the RunnerProvider

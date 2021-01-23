@@ -18,6 +18,7 @@ func (eip *encodedInputProvider) Position() int      { return eip.iip.Position()
 func (eip *encodedInputProvider) ResetPosition()     { eip.iip.ResetPosition() }
 func (eip *encodedInputProvider) IncrementPosition() { eip.iip.IncrementPosition() }
 func (eip *encodedInputProvider) Total() int         { return eip.iip.Total() }
+func (eip *encodedInputProvider) Inject(x [][]byte)  { eip.iip.Inject(x) }
 
 func (eip *encodedInputProvider) Value() []byte {
 	data, err := eip.ei.Encode(eip.iip.Value())

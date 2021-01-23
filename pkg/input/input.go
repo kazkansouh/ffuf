@@ -159,3 +159,12 @@ func (i *MainInputProvider) Total() int {
 	}
 	return count
 }
+
+func (i *MainInputProvider) Inject(keyword string, values [][]byte) {
+	for _, p := range i.Providers {
+		if p.Keyword() == keyword {
+			p.Inject(values)
+			break
+		}
+	}
+}

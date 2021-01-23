@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -134,47 +135,53 @@ func (j *Job) prepareQueueJob() {
 
 func (j *Job) startExecution() {
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go j.runProgress(&wg)
+	done := make(chan struct{})
+	go j.runProgress(done)
 	//Limiter blocks after reaching the buffer, ensuring limited concurrency
 	limiter := make(chan bool, j.Config.Threads)
+	var noop = false
 
-	for j.Input.Next() {
-		// Check if we should stop the process
-		j.CheckStop()
+	for !noop {
+		noop = true
+		for j.Input.Next() {
+			noop = false
+			// Check if we should stop the process
+			j.CheckStop()
 
-		if !j.Running {
-			defer j.Output.Warning(j.Error)
-			break
-		}
-
-		limiter <- true
-		nextInput := j.Input.Value()
-		nextPosition := j.Input.Position()
-		wg.Add(1)
-		j.Counter++
-		go func() {
-			defer func() { <-limiter }()
-			defer wg.Done()
-			j.runTask(nextInput, nextPosition, false)
-			if j.Config.Delay.HasDelay {
-				var sleepDurationMS time.Duration
-				if j.Config.Delay.IsRange {
-					sTime := j.Config.Delay.Min + rand.Float64()*(j.Config.Delay.Max-j.Config.Delay.Min)
-					sleepDurationMS = time.Duration(sTime * 1000)
-				} else {
-					sleepDurationMS = time.Duration(j.Config.Delay.Min * 1000)
-				}
-				time.Sleep(sleepDurationMS * time.Millisecond)
+			if !j.Running {
+				defer j.Output.Warning(j.Error)
+				break
 			}
-		}()
 
-		if !j.RunningJob {
-			defer j.Output.Warning(j.Error)
-			return
+			limiter <- true
+			nextInput := j.Input.Value()
+			nextPosition := j.Input.Position()
+			wg.Add(1)
+			j.Counter++
+			go func() {
+				defer func() { <-limiter }()
+				defer wg.Done()
+				j.runTask(nextInput, nextPosition, false)
+				if j.Config.Delay.HasDelay {
+					var sleepDurationMS time.Duration
+					if j.Config.Delay.IsRange {
+						sTime := j.Config.Delay.Min + rand.Float64()*(j.Config.Delay.Max-j.Config.Delay.Min)
+						sleepDurationMS = time.Duration(sTime * 1000)
+					} else {
+						sleepDurationMS = time.Duration(j.Config.Delay.Min * 1000)
+					}
+					time.Sleep(sleepDurationMS * time.Millisecond)
+				}
+			}()
+
+			if !j.RunningJob {
+				defer j.Output.Warning(j.Error)
+				return
+			}
 		}
+		wg.Wait()
 	}
-	wg.Wait()
+	<-done
 	j.updateProgress()
 	return
 }
@@ -190,17 +197,18 @@ func (j *Job) interruptMonitor() {
 	}()
 }
 
-func (j *Job) runProgress(wg *sync.WaitGroup) {
-	defer wg.Done()
-	totalProgress := j.Input.Total()
-	for j.Counter <= totalProgress {
+func (j *Job) runProgress(done chan<- struct{}) {
+	defer func() {
+		close(done)
+	}()
+	for j.Counter <= j.Input.Total() {
 
 		if !j.Running {
 			break
 		}
 
 		j.updateProgress()
-		if j.Counter == totalProgress {
+		if j.Counter == j.Input.Total() {
 			return
 		}
 
@@ -301,6 +309,12 @@ func (j *Job) runTask(input map[string][]byte, position int, retried bool) {
 			}
 		}
 		j.Output.Result(resp)
+
+		// Increase current inputs for FUZZ keyword
+		if j.Config.SearchBackups {
+			j.handleSearchBackups(input["FUZZ"])
+		}
+
 		// Refresh the progress indicator as we printed something out
 		j.updateProgress()
 	}
@@ -308,7 +322,35 @@ func (j *Job) runTask(input map[string][]byte, position int, retried bool) {
 	if j.Config.Recursion && len(resp.GetRedirectLocation(false)) > 0 {
 		j.handleRecursionJob(resp)
 	}
+
 	return
+}
+
+// Inject new items into FUZZ wordlist to automatically look for backups of current file
+func (j *Job) handleSearchBackups(fuzz_value []byte) {
+	// filter directories and prevent recursion
+	fuzz := string(fuzz_value)
+	if fuzz == "" || fuzz == "/" || strings.Contains(fuzz[1:], "/") {
+		// this is probably overzealous, but avoids situations
+		// where there is a file in a directory which is
+		// matched erroneously and then generating spurious
+		// items for each extension. probably better to also
+		// consider status code.
+		return
+	}
+	for _, ext := range j.Config.BackupExtensions {
+		if strings.HasSuffix(fuzz, ext) {
+			return
+		}
+	}
+
+	extraInputs := make([][]byte, len(j.Config.BackupExtensions))
+	for i, ext := range j.Config.BackupExtensions {
+		new := make([]byte, len(fuzz_value)+len(ext))
+		copy(new, fuzz_value)
+		extraInputs[i] = append(new[:len(fuzz_value)], []byte(ext)...)
+	}
+	j.Input.Inject("FUZZ", extraInputs)
 }
 
 //handleRecursionJob adds a new recursion job to the job queue if a new directory is found

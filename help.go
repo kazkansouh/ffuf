@@ -61,7 +61,7 @@ func Usage() {
 		Description:   "",
 		Flags:         make([]UsageFlag, 0),
 		Hidden:        false,
-		ExpectedFlags: []string{"ac", "acc", "c", "maxtime", "maxtime-job", "p", "s", "sa", "se", "sf", "t", "v", "V", "banner", "dont-check-content-type"},
+		ExpectedFlags: []string{"ac", "acc", "c", "maxtime", "maxtime-job", "p", "s", "sa", "se", "sf", "t", "v", "V", "banner", "dont-check-content-type", "dont-search-backups"},
 	}
 	u_compat := UsageSection{
 		Name:          "COMPATIBILITY OPTIONS",

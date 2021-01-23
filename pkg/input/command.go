@@ -70,3 +70,6 @@ func (c *CommandInput) Value() []byte {
 func (c *CommandInput) Total() int {
 	return c.config.InputNum
 }
+
+//CommandInput does not support Inject currently, but could if necerssary.
+func (c *CommandInput) Inject(values [][]byte) {}
