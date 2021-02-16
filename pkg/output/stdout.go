@@ -8,6 +8,7 @@ import (
 	"path"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ffuf/ffuf/pkg/ffuf"
@@ -412,12 +413,17 @@ func (s *Stdoutput) resultMultiline(resp ffuf.Response) {
 func (s *Stdoutput) resultNormal(resp ffuf.Response) {
 	var res_str string
 	res_str = fmt.Sprintf(
-		"%s[Status: %s, Size: %7d, Words: %5d, Lines: %5d] %s",
+		"%s%sStatus: %s%s Size: %s%s Words: %s%s Lines: %s%s %s",
 		TERMINAL_CLEAR_LINE,
+		s.colorize("[", ANSI_DARK_GRAY),
 		s.colorize_status(fmt.Sprintf("%d", resp.StatusCode), resp.StatusCode),
-		resp.ContentLength,
-		resp.ContentWords,
-		resp.ContentLines,
+		s.colorize(",", ANSI_DARK_GRAY),
+		s.pad(resp.ContentLength, "%d", 7),
+		s.colorize(",", ANSI_DARK_GRAY),
+		s.pad(resp.ContentWords, "%d", 5),
+		s.colorize(",", ANSI_DARK_GRAY),
+		s.pad(resp.ContentLines, "%d", 5),
+		s.colorize("]", ANSI_DARK_GRAY),
 		s.colorize(s.prepareInputsOneLine(resp), ANSI_LIGHT_GREEN),
 	)
 	fmt.Println(res_str)
@@ -445,6 +451,15 @@ func (s *Stdoutput) colorize(input string, colorCode string) string {
 		return input
 	}
 	return fmt.Sprintf("%s%s%s", colorCode, input, ANSI_CLEAR)
+}
+
+func (s *Stdoutput) pad(value interface{}, format string, width int) string {
+	str := fmt.Sprintf(format, value)
+	i := width - len(str)
+	if i > 0 {
+		str = s.colorize(strings.Repeat("·", i), ANSI_DARK_GRAY) + str
+	}
+	return str
 }
 
 func printOption(name []byte, value []byte) {

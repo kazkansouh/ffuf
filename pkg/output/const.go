@@ -10,4 +10,5 @@ const (
 	ANSI_BLUE           = "\x1b[34m"
 	ANSI_YELLOW         = "\x1b[33m"
 	ANSI_LIGHT_GREEN    = "\x1b[92m"
+	ANSI_DARK_GRAY      = "\x1b[90m"
 )
