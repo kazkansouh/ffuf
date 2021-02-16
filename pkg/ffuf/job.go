@@ -117,6 +117,7 @@ func (j *Job) Start() {
 		j.startExecution()
 	}
 
+	j.updateProgress()
 	j.Output.Finalize()
 }
 
@@ -191,7 +192,7 @@ func (j *Job) interruptMonitor() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		for _ = range sigChan {
-			j.Error = "Caught keyboard interrupt (Ctrl-C)\n"
+			j.Error = "Caught keyboard interrupt (Ctrl-C)"
 			j.Stop()
 		}
 	}()
