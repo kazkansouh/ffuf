@@ -141,7 +141,7 @@ func (j *Job) startExecution() {
 	limiter := make(chan bool, j.Config.Threads)
 	var noop = false
 
-	for !noop {
+	for !noop && j.Running {
 		noop = true
 		for j.Input.Next() {
 			noop = false
