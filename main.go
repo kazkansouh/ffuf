@@ -90,7 +90,7 @@ func main() {
 	flag.StringVar(&conf.Data, "data", "", "POST data (alias of -d)")
 	flag.StringVar(&conf.Data, "data-ascii", "", "POST data (alias of -d)")
 	flag.StringVar(&conf.Data, "data-binary", "", "POST data (alias of -d)")
-	flag.BoolVar(&conf.Colors, "c", false, "Colorize output.")
+	flag.BoolVar(&conf.Colors, "c", true, "Colorize output.")
 	flag.BoolVar(&ignored, "compressed", true, "Dummy flag for copy as curl functionality (ignored)")
 	flag.Var(&opts.inputcommands, "input-cmd", "Command producing the input. --input-num is required when using this input method. Overrides -w.")
 	flag.IntVar(&conf.InputNum, "input-num", 100, "Number of inputs to test. Used in conjunction with --input-cmd.")
