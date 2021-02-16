@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"time"
 
@@ -379,7 +380,7 @@ func (s *Stdoutput) resultMultiline(resp ffuf.Response) {
 	var res_hdr, res_str string
 	res_str = "%s%s    * %s: %s\n"
 	res_hdr = fmt.Sprintf("%s[Status: %d, Size: %d, Words: %d, Lines: %d]", TERMINAL_CLEAR_LINE, resp.StatusCode, resp.ContentLength, resp.ContentWords, resp.ContentLines)
-	res_hdr = s.colorize(res_hdr, resp.StatusCode)
+	res_hdr = s.colorize_status(res_hdr, resp.StatusCode)
 	reslines := ""
 	if s.config.Verbose {
 		reslines = fmt.Sprintf("%s%s| URL | %s\n", reslines, TERMINAL_CLEAR_LINE, resp.Request.Url)
@@ -389,15 +390,20 @@ func (s *Stdoutput) resultMultiline(resp ffuf.Response) {
 		}
 	}
 	if resp.ResultFile != "" {
-		reslines = fmt.Sprintf("%s%s| RES | %s\n", reslines, TERMINAL_CLEAR_LINE, resp.ResultFile)
+		reslines = fmt.Sprintf("%s%s| RES | %s\n", reslines, TERMINAL_CLEAR_LINE, resp.ResultFile)
 	}
-	for k, v := range resp.Request.Input {
+	keys := []string{}
+	for k := range resp.Request.Input {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
 		if inSlice(k, s.config.CommandKeywords) {
 			// If we're using external command for input, display the position instead of input
 			reslines = fmt.Sprintf(res_str, reslines, TERMINAL_CLEAR_LINE, k, strconv.Itoa(resp.Request.Position))
 		} else {
 			// Wordlist input
-			reslines = fmt.Sprintf(res_str, reslines, TERMINAL_CLEAR_LINE, k, v)
+			reslines = fmt.Sprintf(res_str, reslines, TERMINAL_CLEAR_LINE, k, resp.Request.Input[k])
 		}
 	}
 	fmt.Printf("%s\n%s\n", res_hdr, reslines)
@@ -405,14 +411,19 @@ func (s *Stdoutput) resultMultiline(resp ffuf.Response) {
 
 func (s *Stdoutput) resultNormal(resp ffuf.Response) {
 	var res_str string
-	res_str = fmt.Sprintf("%s%-23s [Status: %s, Size: %d, Words: %d, Lines: %d]", TERMINAL_CLEAR_LINE, s.prepareInputsOneLine(resp), s.colorize(fmt.Sprintf("%d", resp.StatusCode), resp.StatusCode), resp.ContentLength, resp.ContentWords, resp.ContentLines)
+	res_str = fmt.Sprintf(
+		"%s[Status: %s, Size: %7d, Words: %5d, Lines: %5d] %s",
+		TERMINAL_CLEAR_LINE,
+		s.colorize_status(fmt.Sprintf("%d", resp.StatusCode), resp.StatusCode),
+		resp.ContentLength,
+		resp.ContentWords,
+		resp.ContentLines,
+		s.colorize(s.prepareInputsOneLine(resp), ANSI_LIGHT_GREEN),
+	)
 	fmt.Println(res_str)
 }
 
-func (s *Stdoutput) colorize(input string, status int64) string {
-	if !s.config.Colors {
-		return fmt.Sprintf("%s", input)
-	}
+func (s *Stdoutput) colorize_status(input string, status int64) string {
 	colorCode := ANSI_CLEAR
 	if status >= 200 && status < 300 {
 		colorCode = ANSI_GREEN
@@ -425,6 +436,13 @@ func (s *Stdoutput) colorize(input string, status int64) string {
 	}
 	if status >= 500 && status < 600 {
 		colorCode = ANSI_RED
+	}
+	return s.colorize(input, colorCode)
+}
+
+func (s *Stdoutput) colorize(input string, colorCode string) string {
+	if !s.config.Colors {
+		return input
 	}
 	return fmt.Sprintf("%s%s%s", colorCode, input, ANSI_CLEAR)
 }
