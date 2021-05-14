@@ -496,6 +496,21 @@ func prepareConfig(parseOpts *cliOptions, conf *ffuf.Config) error {
 		}
 		if !found {
 			errs.Add(fmt.Errorf("Unknown output file format (-of): %s", parseOpts.outputFormat))
+		} else {
+			extensions := []string{}
+			if conf.OutputFormat == "all" {
+				for _, f := range outputFormats[1:] {
+					extensions = append(extensions, "."+f)
+				}
+			} else {
+				extensions = []string{""}
+			}
+			for _, e := range extensions {
+				fname := conf.OutputFile + e
+				if _, err := os.Stat(fname); err == nil {
+					errs.Add(fmt.Errorf("Output file exists: %s", fname))
+				}
+			}
 		}
 	}
 
