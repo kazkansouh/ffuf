@@ -59,16 +59,14 @@ A common use case for encoders is dealing with passwords:
 
 ```plaintext
 $ ffuf -w passwords.txt:FUZZ:urlenc -u http://some.domain/login -d 'user=admin&password=FUZZ'
-Encountered error(s): 1 errors occured.                                                     
+Encountered error(s): 1 errors occured.
         * No Content-Type header defined, ignore this error with flag: -dont-check-content-type 
-...snip...
 ```
 
 Here it warns that the content type header is missing and refuses to run. So lets try again:
 
 ```plaintext
-$ ffuf -w passwords.txt:FUZZ:urlenc -u http://some.domain/login -d 'user=admin&password=FUZZ' -H 'Content-Type: application/x-www-form-urlencoded
-'
+$ ffuf -w passwords.txt:FUZZ:urlenc -u http://some.domain/login -d 'user=admin&password=FUZZ' -H 'Content-Type: application/x-www-form-urlencoded'
 ```
 
 To find out what encoders are currently implemented, use encoder list parameter `-el`:
@@ -90,7 +88,7 @@ numbers. Also, notice that the fuzzed keyword now appears at the end
 of the line instead of the beginning.
 
 ```plaintext
-$ ffuf -w <(seq 1 3):FUZZ:urlenc:printf -ep FUZZ_printf_fmt=%02d -u 'https://postman-echo.com/get?number=FUZZ'
+$ ffuf -w <(seq 1 3):FUZZ:printf -ep FUZZ_printf_fmt=%02d -u 'https://postman-echo.com/get?number=FUZZ'
 [Status: 200, Size: ····293, Words: ····5, Lines: ····1] 01
 [Status: 200, Size: ····293, Words: ····5, Lines: ····1] 03
 [Status: 200, Size: ····293, Words: ····5, Lines: ····1] 02
@@ -99,7 +97,7 @@ $ ffuf -w <(seq 1 3):FUZZ:urlenc:printf -ep FUZZ_printf_fmt=%02d -u 'https://pos
 Or even dates:
 
 ```plaintext
-$ ffuf -w <(seq 1 3):DAY:urlenc:printf -ep DAY_printf_fmt=%02d -w <(seq 1 3):MON:urlenc:printf -ep MON_printf_fmt=%02d -u 'https://postman-echo.com/get?date=2021-MON-DAY'
+$ ffuf -w <(seq 1 3):DAY:printf -ep DAY_printf_fmt=%02d -w <(seq 1 3):MON:printf -ep MON_printf_fmt=%02d -u 'https://postman-echo.com/get?date=2021-MON-DAY'
 [Status: 200, Size: 305, Words: 5, Lines: 1]
     * DAY: 01
     * MON: 01
